@@ -1,7 +1,7 @@
 const APIController = (function() {
     
     const clientId = 'e667cde587c544508d5926555e9bfc39';
-    const clientSecret = 'd47902de97df4f36969179489217db2c';
+    const clientSecret = 'f6dcff6af21e4ab4a56709acfa81f991';
   
     // private methods
     const _getToken = async () => {
@@ -19,6 +19,16 @@ const APIController = (function() {
         return data.access_token;
     }
     
+    const getUserProfile = async(token) => {
+        const result = await fetch(`https://api.spotify.com/v1/me`, {
+            method: 'GET',
+            headers: { 'Authorization' : 'Bearer ' + token}
+        });
+
+        const data = await result.json();
+        console.log(data.email) ;
+    }
+
     const _getGenres = async (token) => {
   
         const result = await fetch(`https://api.spotify.com/v1/browse/categories?locale=sv_US`, {
@@ -66,6 +76,18 @@ const APIController = (function() {
         const data = await result.json();
         return data;
     }
+
+    const _getTopArtist = async (token) => {
+  
+        const result = await fetch(`https://api.spotify.com/v1/me/top/artists`, {
+            method: 'GET',
+            headers: { 'Authorization' : 'Bearer ' + token}
+        });
+  
+        const data = await result.json();
+        return data.items;
+        console.log(data.items);
+    }
   
     return {
         getToken() {
@@ -82,6 +104,9 @@ const APIController = (function() {
         },
         getTrack(token, trackEndPoint) {
             return _getTrack(token, trackEndPoint);
+        },
+        getTopArtist(token) {
+            return _getTopArtists(token);
         }
     }
   })();
