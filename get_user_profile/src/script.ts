@@ -27,7 +27,7 @@ async function fetchProfile(code: string): Promise<UserProfile> {
 }
 
 async function fetchTopArtist(code: string): Promise<TopArtist> {
-    const result = await fetch("https://api.spotify.com/v1/me/top/artists?limit=1h&offset=0&time_range=long_term", {
+    const result = await fetch("https://api.spotify.com/v1/me/top/artists?limit=1", {
         method: "GET", headers: { Authorization: `Bearer ${code}` }
     });
 
@@ -49,7 +49,7 @@ function populateUI(profile: UserProfile) {
 }
 
 function populateUI2(topArtist: TopArtist) {
-    console.log(topArtist.items.name)
-    document.getElementById("topA")!.innerText = topArtist.items.name;
+    console.log(topArtist)
+    document.getElementById("topA")!.innerText = topArtist.items[0].name;
 }
 

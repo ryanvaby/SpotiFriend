@@ -17,16 +17,30 @@ interface UserProfile {
 }
 
 interface TopArtist {
-    // items: {
-    //     name: string,
-    // }
-    items: {
-        name: string;
-    }
+    href: string;
+    limit: number;
+    next: string;
+    offset: number;
+    previous: string;
+    total: number;
+    items: Item[];
 }
 
 interface Image {
     url: string;
     height: number;
     width: number;
+}
+
+interface Item {
+    external_urls: { spotify: string; };
+    followers: { href: string; total: number; };
+    genres: string[];
+    href: string;
+    id: string;
+    images: Image[];
+    name: string;
+    popularity: number;
+    type: string;
+    uri: string;
 }

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify Callback</title>
+</head>
+<body>
+    <h1>Spotify Callback</h1>
+    <p id="message">Processing...</p>
+    <div id="user-info"></div>
+    <div id="top-artists"></div>
+    <div id="top-tracks"></div>
+
+    <script>
+        function getQueryParams() {
+            const params = {};
+            const queryString = window.location.search.substring(1);
+            const regex = /([^&=]+)=([^&]*)/g;
+            let m;
+            while (m = regex.exec(queryString)) {
+                params[decodeURIComponent(m[1])] = decodeURIComponent(m[2]);
+            }
+            return params;
+        }
+
+        const params = getQueryParams();
+        const authorizationCode = params['code'];
+
+        if (authorizationCode) {
+            document.getElementById('message').textContent = 'Authorization code received. Exchanging for access token...';
+
+            const clientId = 'e667cde587c544508d5926555e9bfc39';
+            const clientSecret = 'f6dcff6af21e4ab4a56709acfa81f991';
+            const redirectUri = 'http://localhost:8888/callback.html';
+            const tokenUrl = 'https://accounts.spotify.com/api/token';
+
+            const headers = new Headers();
+            headers.append('Content-Type', 'application/x-www-form-urlencoded');
+            headers.append('Authorization', 'Basic ' + btoa(clientId + ':' + clientSecret));
+
+            const body = new URLSearchParams({
+                grant_type: 'authorization_code',
+                code: authorizationCode,
+                redirect_uri: redirectUri
+            });
+
+            fetch(tokenUrl, {
+                method: 'POST',
+                headers: headers,
+                body: body.toString()
+            })
+            .then(response => response.json())
+            .then(data => {
+                const accessToken = data.access_token;
+                const refreshToken = data.refresh_token;
+                document.getElementById('message').textContent = 'Access token received. Fetching user info and top artists...';
+
+                // Fetch user info
+                return fetch('https://api.spotify.com/v1/me', {
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`
+                    }
+                }).then(response => response.json()).then(userInfo => {
+                    document.getElementById('user-info').textContent = `Hello, ${userInfo.display_name}!`;
+
+                    // Fetch user's top artists
+                    return fetch('https://api.spotify.com/v1/me/top/artists?time_range=long_term&limit=5', {
+                        headers: {
+                            'Authorization': `Bearer ${accessToken}`
+                        }
+                    });
+                }).then(response => response.json()).then(artistsInfo => {
+                    const topArtists = artistsInfo.items;
+                    const topArtistsDiv = document.getElementById('top-artists');
+                    topArtistsDiv.innerHTML = '<h2>Top Artists</h2>';
+                    topArtists.forEach((artist, index) => {
+                        const artistElement = document.createElement('p');
+                        artistElement.textContent = `${index + 1}. ${artist.name}`;
+                        topArtistsDiv.appendChild(artistElement);
+                    });
+
+                    return fetch('https://api.spotify.com/v1/me/top/tracks?time_range=long_term&limit=5', {
+                        headers: {
+                            'Authorization': `Bearer ${accessToken}`
+                        }
+                    });
+                }).then(response => response.json()).then(tracksInfo => {
+                    const topTracks = tracksInfo.items;
+                    const topTracksDiv = document.getElementById('top-tracks');
+                    topTracksDiv.innerHTML = '<h2>Top Tracks</h2>';
+                    topTracks.forEach((track, index) => {
+                        const trackElement = document.createElement('p');
+                        trackElement.textContent = `${index + 1}. ${track.name}`;
+                        topTracksDiv.appendChild(trackElement);
+                    });
+                });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('message').textContent = 'An error occurred.';
+            });
+        } else {
+            document.getElementById('message').textContent = 'No authorization code found.';
+        }
+    </script>
+</body>
+</html>
