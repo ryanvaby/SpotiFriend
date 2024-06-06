@@ -12,8 +12,10 @@ function App() {
     const [token, setToken] = useState("")
     const [searchKey, setSearchKey] = useState("")
     const [artists, setArtists] = useState([])
-    const [displayName, setDisplayName] = useState("");
-    var top20Artists = {}; 
+    //const [displayName, setDisplayName] = useState("");
+    var userName;
+    var userTopArtists;
+    var userData = []; 
 
 
     useEffect(() => {
@@ -68,7 +70,7 @@ function App() {
             }
         })
         
-        setDisplayName(data.display_name)
+        userName = data.display_name;
     }
 
     const getTopArtists = async (e) => {
@@ -89,7 +91,21 @@ function App() {
             topA.push(data.items[i].name);
         }
         
-        top20Artists[displayName] = topA;
+        userTopArtists = topA;
+        populateUserData(userName, userTopArtists);
+
+    }
+
+    function populateUserData(name, array0) {
+        const array1 = [];
+
+        userData = [
+            [name, 20, 60, "A"],
+            [arrray0, 10, 52, "B"],
+            ["Joey", 5, 24, "F"],
+            ["John", 28, 43, "A"],
+            ["Liza", 16, 51, "B"]
+        ];
     }
 
     function populateLeaderboard(allUsers, currentUser, currentUserArtists) {
