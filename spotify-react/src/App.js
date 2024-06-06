@@ -17,7 +17,8 @@ function App() {
     //const [displayName, setDisplayName] = useState("");
     var userName;
     //var userTopArtists;
-    var userData = []; 
+    var userData = [];
+    var sortedLeaderboard = new Map();
 
 
     useEffect(() => {
@@ -73,6 +74,7 @@ function App() {
         })
         
         userName = data.display_name;
+        getTopArtists()
     }
 
     const getTopArtists = async (e) => {
@@ -132,7 +134,6 @@ function App() {
     }
 
     function populateLeaderboard(arrayData) {
-        var out = new Map(iterable)
         var score;
         var currentUserArtists = arrayData[1][0]
 
@@ -147,10 +148,10 @@ function App() {
                     }
                 }
             }
-            out.set(user, count)
+            sortedLeaderboard.set(arrayData[0][i], score)
         }
 
-        return out
+        
     }
 
     /*function populateLeaderboard(allUsers, currentUserArtists) {
@@ -185,13 +186,13 @@ function App() {
                 {!token ?
                     <a href={`${AUTH_ENDPOINT}?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=${RESPONSE_TYPE}&scope=streaming%20user-read-email%20user-read-private%20user-top-read%20user-read-currently-playing`}>Login
                         to Spotify</a>
-                    :<><form onSubmit={searchArtists}>
-                        <input type="text" onChange={e => setSearchKey(e.target.value)} />
-                        <button type={"submit"}>Search</button>
-                    </form><button onClick={logout}>Logout</button></>}
+                    :<><form onSubmit={getUserProfile}>
+                        {/*<input type="text" onChange={e => setSearchKey(e.target.value)} />*/}
+                        <button type={"submit"}>Find</button>
+                    </form> {/*<button onClick={logout}>Logout</button>*/}</>}
             </header>
             {/*{renderArtists()}*/}
-            <Leaderboard data={sortedData} />
+            <Leaderboard data={sortedLeaderboard} />
         </div>
         
     );

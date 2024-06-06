@@ -1,7 +1,16 @@
 import React from 'react';
 import './Leaderboard.css';
 
+
+
 const Leaderboard = ({ data }) => {
+    const dataArray = Object.keys(data).map(name => ({
+        name: name,
+        score: data[name]
+    }));
+    
+    const sortedData = dataArray.sort((a, b) => b.score - a.score);
+
     return (
         <div className="leaderboard">
             <h1>Leaderboard</h1>
@@ -14,7 +23,7 @@ const Leaderboard = ({ data }) => {
                     </tr>
                 </thead>
                 <tbody>
-                    {data.map((item, index) => (
+                    {sortedData.map((item, index) => (
                         <tr key={index}>
                             <td>{index + 1}</td>
                             <td>{item.name}</td>
