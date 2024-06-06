@@ -96,15 +96,34 @@ function App() {
 
     }
 
-    function populateUserData(name, array0) {
-        const array1 = [];
+    const artistsPool = [
+        "Taylor Swift", "Drake", "Billie Eilish", "Ariana Grande", "Ed Sheeran",
+        "Post Malone", "Beyoncé", "Justin Bieber", "Lady Gaga", "Kanye West",
+        "Rihanna", "Adele", "Bruno Mars", "Kendrick Lamar", "The Weeknd",
+        "Dua Lipa", "Harry Styles", "Katy Perry", "Shawn Mendes", "Travis Scott",
+        "Cardi B", "Lil Nas X", "Halsey", "Selena Gomez", "Lizzo",
+        "Maroon 5", "Nicki Minaj", "Camila Cabello", "Sam Smith", "Miley Cyrus"
+    ];
+    
+
+    function generateRandomArtists() {
+            const randomArtists = [];
+            for (let i = 0; i < 20; i++) {
+                const randomIndex = Math.floor(Math.random() * artistsPool.length);
+                randomArtists.push(artistsPool[randomIndex]);
+            }
+            return randomArtists;
+    }
+  
+    function populateUserData(name, artistsArray0) {
+        const artistsArray1 = generateRandomArtists();
+        const artistsArray2 = generateRandomArtists();
+        const artistsArray3 = generateRandomArtists();
+        const artistsArray4 = generateRandomArtists();
 
         userData = [
-            [name, 20, 60, "A"],
-            [arrray0, 10, 52, "B"],
-            ["Joey", 5, 24, "F"],
-            ["John", 28, 43, "A"],
-            ["Liza", 16, 51, "B"]
+            [name, "Joe", "Katherine", "Andy", "Amanda"]
+            [artistsArray0, artistsArray1, artistsArray2, artistsArray3, artistsArray4]
         ];
     }
 
