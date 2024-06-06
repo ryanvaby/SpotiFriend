@@ -13,7 +13,7 @@ function App() {
     const [searchKey, setSearchKey] = useState("")
     const [artists, setArtists] = useState([])
     const [displayName, setDisplayName] = useState("");
-    var top20Artists = {}; 
+    var userData = []; 
 
 
     useEffect(() => {
@@ -93,9 +93,23 @@ function App() {
     }
 
     function populateLeaderboard(allUsers, currentUser, currentUserArtists) {
+        var count;
+        var out = new Map(iterable)
         for (var i=0; i < 20; i++) {
-            currentList = allUsers[0][i]
+            count = 0
+            user = allUsers[0][i]
+            userArtists = allUsers[1][i]
+            for (var k=0; k < 20; k++) {
+                temp = currentUserArtists[k]
+                for (var j=0; j < 20; j++) {
+                    if (temp == userArtists[j]){
+                        count++
+                    }
+                }
+            }
+            out.set(user, count)
         }
+        return out
     }
 
     const logout = () => {
