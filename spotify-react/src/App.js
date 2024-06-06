@@ -1,4 +1,6 @@
+import React from 'react'
 import './App.css';
+import Leaderboard from './components/Leaderboard';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 
@@ -14,7 +16,7 @@ function App() {
     const [artists, setArtists] = useState([])
     //const [displayName, setDisplayName] = useState("");
     var userName;
-    var userTopArtists;
+    //var userTopArtists;
     var userData = []; 
 
 
@@ -91,7 +93,7 @@ function App() {
             topA.push(data.items[i].name);
         }
         
-        userTopArtists = topA;
+        var userTopArtists = topA;
         populateUserData(userName, userTopArtists);
 
     }
@@ -125,9 +127,33 @@ function App() {
             [name, "Joe", "Katherine", "Andy", "Amanda"]
             [artistsArray0, artistsArray1, artistsArray2, artistsArray3, artistsArray4]
         ];
+
+        populateLeaderboard(userData)
     }
 
-    function populateLeaderboard(allUsers, currentUserArtists) {
+    function populateLeaderboard(arrayData) {
+        var out = new Map(iterable)
+        var score;
+        var currentUserArtists = arrayData[1][0]
+
+        for (let i = 1; i < 5; i++){
+            score = 0;
+            var comparingArray = arrayData[i][1]
+            for (let k = 0; k < 20; k++){
+                var temp = currentUserArtists[k]
+                for(let j = 0; j < 20; j++) {
+                    if (temp == comparingArray[j]){
+                        score++;
+                    }
+                }
+            }
+            out.set(user, count)
+        }
+
+        return out
+    }
+
+    /*function populateLeaderboard(allUsers, currentUserArtists) {
         var count;
         var out = new Map(iterable)
         for (var i=0; i < 20; i++) {
@@ -145,7 +171,7 @@ function App() {
             out.set(user, count)
         }
         return out
-    }
+    } */
 
     const logout = () => {
         setToken("")
@@ -155,7 +181,7 @@ function App() {
     return (
         <div className="App">
             <header className="App-header">
-                <h1>Spotify React</h1>
+                <h1>Spotifriend</h1>
                 {!token ?
                     <a href={`${AUTH_ENDPOINT}?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=${RESPONSE_TYPE}&scope=streaming%20user-read-email%20user-read-private%20user-top-read%20user-read-currently-playing`}>Login
                         to Spotify</a>
@@ -164,8 +190,10 @@ function App() {
                         <button type={"submit"}>Search</button>
                     </form><button onClick={logout}>Logout</button></>}
             </header>
-            {renderArtists()}
+            {/*{renderArtists()}*/}
+            <Leaderboard data={sortedData} />
         </div>
+        
     );
 }
 
