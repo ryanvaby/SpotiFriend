@@ -127,7 +127,7 @@ function App() {
         ];
     }
 
-    function populateLeaderboard(allUsers, currentUser, currentUserArtists) {
+    function populateLeaderboard(allUsers, currentUserArtists) {
         var count;
         var out = new Map(iterable)
         for (var i=0; i < 20; i++) {
