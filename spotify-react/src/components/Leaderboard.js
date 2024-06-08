@@ -4,16 +4,12 @@ import './Leaderboard.css';
 
 
 const Leaderboard = ({ data }) => {
-    const dataArray = Object.keys(data).map(name => ({
-        name: name,
-        score: data[name]
-    }));
-    
-    const sortedData = dataArray.sort((a, b) => b.score - a.score);
+    const sortedMap = new Map([...data.entries()].sort((a, b) => b[1] - a[1]));
+    console.log(sortedMap)
 
     return (
         <div className="leaderboard">
-            <h1>Leaderboard</h1>
+            <h1>Artist Leaderboard</h1>
             <table>
                 <thead>
                     <tr>
@@ -23,11 +19,11 @@ const Leaderboard = ({ data }) => {
                     </tr>
                 </thead>
                 <tbody>
-                    {sortedData.map((item, index) => (
-                        <tr key={index}>
+                    {[...sortedMap.entries()].map(([name, score], index) => (
+                        <tr key={name}>
                             <td>{index + 1}</td>
-                            <td>{item.name}</td>
-                            <td>{item.score}</td>
+                            <td>{name}</td>
+                            <td>{score}</td>
                         </tr>
                     ))}
                 </tbody>

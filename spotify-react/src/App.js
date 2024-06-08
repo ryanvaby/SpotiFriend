@@ -10,15 +10,18 @@ function App() {
     const REDIRECT_URI = "http://localhost:3000"
     const AUTH_ENDPOINT = "https://accounts.spotify.com/authorize"
     const RESPONSE_TYPE = "token"
+    const SCOPE = "user-read-private user-top-read";
 
     const [token, setToken] = useState("")
-    const [searchKey, setSearchKey] = useState("")
-    const [artists, setArtists] = useState([])
+    //const [searchKey, setSearchKey] = useState("")
+    //const [artists, setArtists] = useState([])
+    const [userName, setUserName] = useState("");
+    const [unsortedLeaderboard, setUnsortedLeaderboard] = useState(new Map());
     //const [displayName, setDisplayName] = useState("");
-    var userName;
+    //var userName;
     //var userTopArtists;
-    var userData = [];
-    var sortedLeaderboard = new Map();
+    //var userData = [];
+    //var sortedLeaderboard = new Map();
 
 
     useEffect(() => {
@@ -31,7 +34,7 @@ function App() {
             window.location.hash = ""
             window.localStorage.setItem("token", token)
         }
-
+        console.log(token)
         setToken(token)
 
     }, [])
@@ -62,51 +65,52 @@ function App() {
     }*/
 
     const getUserProfile = async (e) => {
+        console.log("called")
         e.preventDefault()
         const { data } = await axios.get("https://api.spotify.com/v1/me", {
             headers: {
                 Authorization: `Bearer ${token}`
-            },
-            params: {
-                q: searchKey,
-                type: "displayName"
             }
-        })
+            // params: {
+            //     q: searchKey,
+            //     type: "userN"
+            // }
+        });
         
-        userName = data.display_name;
-        getTopArtists()
+        const userName = data.display_name;
+        console.log(userName);
+        getTopArtists(userName)
     }
 
-    const getTopArtists = async (e) => {
-        e.preventDefault()
+    const getTopArtists = async (userName) => {
+        console.log('artists called')
         const { data } = await axios.get("https://api.spotify.com/v1/me/top/artists?limit=20", {
             headers: {
                 Authorization: `Bearer ${token}`
-            },
-            params: {
-                q: searchKey,
-                type: "artist"
             }
-        })
+            // params: {
+            //     q: searchKey,
+            //     type: "artist"
+            // }
+        });
         
-        const topA = [];
+        const userTop20A = [];
 
         for (let i = 0; i < 20; i++) {
-            topA.push(data.items[i].name);
+            userTop20A.push(data.items[i].name);
         }
         
-        var userTopArtists = topA;
-        populateUserData(userName, userTopArtists);
-
+        console.log(userTop20A)
+        populateUserData(userName, userTop20A);
     }
 
     const artistsPool = [
         "Taylor Swift", "Drake", "Billie Eilish", "Ariana Grande", "Ed Sheeran",
-        "Post Malone", "Beyoncé", "Justin Bieber", "Lady Gaga", "Kanye West",
+        "Post Malone", "Beyoncé", "Justin Bieber", "Conan Gray", "Kanye West",
         "Rihanna", "Adele", "Bruno Mars", "Kendrick Lamar", "The Weeknd",
-        "Dua Lipa", "Harry Styles", "Katy Perry", "Shawn Mendes", "Travis Scott",
-        "Cardi B", "Lil Nas X", "Halsey", "Selena Gomez", "Lizzo",
-        "Maroon 5", "Nicki Minaj", "Camila Cabello", "Sam Smith", "Miley Cyrus"
+        "Dua Lipa", "Harry Styles", "Olivia Rodrigo", "Shawn Mendes", "Travis Scott",
+        "Sabrina Carpenter", "Lil Nas X", "Halsey", "Selena Gomez", "Laufey",
+        "SZA", "Lana Del Rey", "Camila Cabello", "Gracie Abrams", "Miley Cyrus"
     ];
     
 
@@ -125,8 +129,8 @@ function App() {
         const artistsArray3 = generateRandomArtists();
         const artistsArray4 = generateRandomArtists();
 
-        userData = [
-            [name, "Joe", "Katherine", "Andy", "Amanda"]
+        let userData = [
+            [name, "Joe", "Katherine", "Andy", "Amanda"],
             [artistsArray0, artistsArray1, artistsArray2, artistsArray3, artistsArray4]
         ];
 
@@ -134,45 +138,26 @@ function App() {
     }
 
     function populateLeaderboard(arrayData) {
-        var score;
-        var currentUserArtists = arrayData[1][0]
+        const currentUserArtists = arrayData[1][0]
+        const newLeaderboard = new Map();
 
-        for (let i = 1; i < 5; i++){
-            score = 0;
-            var comparingArray = arrayData[i][1]
-            for (let k = 0; k < 20; k++){
-                var temp = currentUserArtists[k]
-                for(let j = 0; j < 20; j++) {
-                    if (temp == comparingArray[j]){
-                        score++;
-                    }
+        for (let i = 1; i < arrayData[0].length; i++){
+            let score = 0;
+            var comparingArray = arrayData[1][i]
+
+            for (let k = 0; k < currentUserArtists.length; k++){
+                const temp = currentUserArtists[k]
+                if (comparingArray.includes(temp)) {
+                    score++;
                 }
             }
-            sortedLeaderboard.set(arrayData[0][i], score)
+            newLeaderboard.set(arrayData[0][i], score)
         }
 
+        console.log(newLeaderboard);
+        setUnsortedLeaderboard(newLeaderboard);
         
     }
-
-    /*function populateLeaderboard(allUsers, currentUserArtists) {
-        var count;
-        var out = new Map(iterable)
-        for (var i=0; i < 20; i++) {
-            count = 0
-            user = allUsers[0][i]
-            userArtists = allUsers[1][i]
-            for (var k=0; k < 20; k++) {
-                temp = currentUserArtists[k]
-                for (var j=0; j < 20; j++) {
-                    if (temp == userArtists[j]){
-                        count++
-                    }
-                }
-            }
-            out.set(user, count)
-        }
-        return out
-    } */
 
     const logout = () => {
         setToken("")
@@ -182,17 +167,24 @@ function App() {
     return (
         <div className="App">
             <header className="App-header">
-                <h1>Spotifriend</h1>
+                <h1>SpotiFriend</h1>
                 {!token ?
-                    <a href={`${AUTH_ENDPOINT}?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=${RESPONSE_TYPE}&scope=streaming%20user-read-email%20user-read-private%20user-top-read%20user-read-currently-playing`}>Login
+                    <a href={`${AUTH_ENDPOINT}?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=${RESPONSE_TYPE}&scope=${SCOPE}`}>Login
                         to Spotify</a>
-                    :<><form onSubmit={getUserProfile}>
-                        {/*<input type="text" onChange={e => setSearchKey(e.target.value)} />*/}
-                        <button type={"submit"}>Find</button>
-                    </form> {/*<button onClick={logout}>Logout</button>*/}</>}
+                    :
+                    <>
+                        <form onSubmit={getUserProfile}>
+                            {/*<input type="text" onChange={e => setSearchKey(e.target.value)} />*/}
+                            <button type="submit"> Get User Profile </button>
+                        </form> 
+                        <button onClick={logout}>Logout</button>
+                    </>
+                }
+
+                <Leaderboard data={unsortedLeaderboard}/>
             </header>
             {/*{renderArtists()}*/}
-            <Leaderboard data={sortedLeaderboard} />
+            
         </div>
         
     );
