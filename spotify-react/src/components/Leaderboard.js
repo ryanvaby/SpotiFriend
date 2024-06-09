@@ -3,13 +3,13 @@ import './Leaderboard.css';
 
 
 
-const Leaderboard = ({ data }) => {
+const Leaderboard = ({ data, type }) => {
     const sortedMap = new Map([...data.entries()].sort((a, b) => b[1] - a[1]));
     console.log(sortedMap)
 
     return (
         <div className="leaderboard">
-            <h1>Artist Leaderboard</h1>
+            <h1>{type} Leaderboard</h1>
             <table>
                 <thead>
                     <tr>

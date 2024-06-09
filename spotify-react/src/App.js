@@ -7,13 +7,14 @@ import axios from 'axios';
 
 function App() {
     const CLIENT_ID = "2f4886cb98814cdb94ea0f9d5078901b"
-    const REDIRECT_URI = "http://192.168.86.41:3000"
+    const REDIRECT_URI = "http://localhost:3000"
     const AUTH_ENDPOINT = "https://accounts.spotify.com/authorize"
     const RESPONSE_TYPE = "token"
     const SCOPE = "user-read-private user-top-read";
 
     const [token, setToken] = useState("")
-    const [unsortedLeaderboard, setUnsortedLeaderboard] = useState(new Map());
+    const [artistLeaderboard, setArtistLeaderboard] = useState(new Map());
+    const [trackLeaderboard, setTrackLeaderboard] = useState(new Map());
 
     const artistsPool = useMemo(() => ([
         "Taylor Swift", "Drake", "Billie Eilish", "Ariana Grande", "Ed Sheeran",
@@ -24,25 +25,44 @@ function App() {
         "SZA", "Lana Del Rey", "Camila Cabello", "Gracie Abrams", "Miley Cyrus"
     ]), []);
 
-    const generateRandomArtists = useCallback(() => {
-        const randomArtists = [];
-        for (let i = 0; i < 20; i++) {
-            const randomIndex = Math.floor(Math.random() * artistsPool.length);
-            randomArtists.push(artistsPool[randomIndex]);
-        }
-        return randomArtists;
-    }, [artistsPool])
+    const tracksPool = useMemo(() => ([
+        "Blinding Lights", "Watermelon Sugar", "Levitating", "Save Your Tears", "Good 4 U",
+        "Peaches", "Smile Flower", "drivers license", "Stay", "Imperfect love",
+        "Bad Habits", "Easy On Me", "Shivers", "Take My Breath", "Deja Vu",
+        "Industry Baby", "Boyfriends", "34+35", "Dynamite", "Doesn't Matter",
+        "But Sometimes", "Willow", "Therefore I Am", "Butter", "Heat Waves",
+        "Don't Start Now", "Circles", "Rockstar", "Someone You Loved", "Truth Hurts"
+    ]), []);
 
-    const populateLeaderboard = useCallback((arrayData) => {
-        const currentUserArtists = arrayData[1][0]
+    const generateRandomData = useCallback((type) => {
+        const randomArray = [];
+
+        if (type === "artists") {
+            for (let i = 0; i < 20; i++) {
+                const randomIndex = Math.floor(Math.random() * artistsPool.length);
+                randomArray.push(artistsPool[randomIndex]);
+            }
+        }
+        else if(type === "tracks"){
+            for (let i = 0; i < 20; i++) {
+                const randomIndex = Math.floor(Math.random() * tracksPool.length);
+                randomArray.push(tracksPool[randomIndex]);
+            }
+        }
+   
+        return randomArray;
+    }, [artistsPool, tracksPool])
+
+    const populateLeaderboard = useCallback((arrayData, type) => {
+        const currentUserArray = arrayData[1][0]
         const newLeaderboard = new Map();
 
         for (let i = 1; i < arrayData[0].length; i++){
             let score = 0;
             var comparingArray = arrayData[1][i]
 
-            for (let k = 0; k < currentUserArtists.length; k++){
-                const temp = currentUserArtists[k]
+            for (let k = 0; k < currentUserArray.length; k++){
+                const temp = currentUserArray[k]
                 if (comparingArray.includes(temp)) {
                     score++;
                 }
@@ -51,22 +71,28 @@ function App() {
         }
 
         console.log(newLeaderboard);
-        setUnsortedLeaderboard(newLeaderboard);
+        if (type === "artists"){
+            setArtistLeaderboard(newLeaderboard); 
+        }
+        else if (type === "tracks"){
+            setTrackLeaderboard(newLeaderboard); 
+        }
+        
     }, [])
 
-    const populateUserData = useCallback((name, artistsArray0) => {
-        const artistsArray1 = generateRandomArtists();
-        const artistsArray2 = generateRandomArtists();
-        const artistsArray3 = generateRandomArtists();
-        const artistsArray4 = generateRandomArtists();
+    const populateUserData = useCallback((name, dataArray0, type) => {
+        var dataArray1 = generateRandomData(type);
+        var dataArray2 = generateRandomData(type);
+        var dataArray3 = generateRandomData(type);
+        var dataArray4 = generateRandomData(type);
 
         let userData = [
             [name, "Joe", "Katherine", "Andy", "Amanda"],
-            [artistsArray0, artistsArray1, artistsArray2, artistsArray3, artistsArray4]
+            [dataArray0, dataArray1, dataArray2, dataArray3, dataArray4]
         ];
 
-        populateLeaderboard(userData)
-    }, [generateRandomArtists, populateLeaderboard])
+        populateLeaderboard(userData, type)
+    }, [generateRandomData, populateLeaderboard])
 
     const getTopArtists = useCallback(async (userName) => {
         console.log('artists called');
@@ -81,7 +107,6 @@ function App() {
             }
         })
         .then(function (response) {
-            console.log(response);
             const { data } = response;
 
             const userTop20A = [];
@@ -90,7 +115,37 @@ function App() {
                 userTop20A.push(data.items[i].name);
             }
             
-            populateUserData(userName, userTop20A);
+            console.log(userTop20A)
+            populateUserData(userName, userTop20A, "artists");
+        })
+        .catch(function (error) { 
+            console.log(error);
+        });
+
+    }, [populateUserData, token])
+
+    const getTopTracks = useCallback(async (userName) => {
+        console.log('tracks called');
+
+        axios.get("https://api.spotify.com/v1/me/top/tracks?limit=20", {
+            headers: {
+                Authorization: `Bearer ${token}`
+            },
+            params: {
+                type: "track",
+                limit: 20
+            }
+        })
+        .then(function (response) {
+            const { data } = response;
+
+            const userTop20T = [];
+
+            for (let i = 0; i < 20; i++) {
+                userTop20T.push(data.items[i].name);
+            }
+            console.log(userTop20T)
+            populateUserData(userName, userTop20T, "tracks");
         })
         .catch(function (error) { 
             console.log(error);
@@ -99,7 +154,7 @@ function App() {
     }, [populateUserData, token])
 
     const getUserProfile = useCallback(async () => {
-        console.log("called");
+        console.log("profile called");
 
         axios.get("https://api.spotify.com/v1/me", {
             headers: {
@@ -108,15 +163,16 @@ function App() {
         })
         .then(function (response) {
             const { data } = response;
-            console.log(response);
             const userName = data.display_name;
+            console.log(userName)
             getTopArtists(userName);
+            getTopTracks(userName);
         })
         .catch(function (error) { 
             console.log(error);
         });
 
-    }, [getTopArtists, token])
+    }, [getTopArtists, getTopTracks, token])
 
     useEffect(() => {
         console.log("in useeffect")
@@ -155,7 +211,8 @@ function App() {
                         >Login to Spotify</a>
                     :
                     <>
-                        <Leaderboard data={unsortedLeaderboard}/>
+                        <Leaderboard data={artistLeaderboard} type={"Artists"}/>
+                        <Leaderboard data={trackLeaderboard} type={"Tracks"}/>
                         <button onClick={logout}>Logout</button>
                     </>
                 }
