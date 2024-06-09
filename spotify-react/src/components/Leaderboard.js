@@ -3,7 +3,7 @@ import './Leaderboard.css';
 
 
 
-const Leaderboard = ({ data, type }) => {
+const Leaderboard = ({ data, type, onScoreClick }) => {
     const sortedMap = new Map([...data.entries()].sort((a, b) => b[1] - a[1]));
     console.log(sortedMap)
 
@@ -23,7 +23,7 @@ const Leaderboard = ({ data, type }) => {
                         <tr key={name}>
                             <td>{index + 1}</td>
                             <td>{name}</td>
-                            <td>{score}</td>
+                            <td onClick={() => onScoreClick(name, type)}>{score}</td>
                         </tr>
                     ))}
                 </tbody>

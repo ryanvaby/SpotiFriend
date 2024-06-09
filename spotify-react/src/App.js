@@ -1,6 +1,8 @@
 import React from 'react'
 import './App.css';
 import Leaderboard from './components/Leaderboard';
+import Button from './components/Button';
+import Modal from './components/Modal';
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import axios from 'axios';
 
@@ -12,9 +14,14 @@ function App() {
     const RESPONSE_TYPE = "token"
     const SCOPE = "user-read-private user-top-read";
 
-    const [token, setToken] = useState("")
+    const [token, setToken] = useState("");
+    var [type, setType] = useState("");
+    const [artistData, setArtistData] = useState([]);
     const [artistLeaderboard, setArtistLeaderboard] = useState(new Map());
+    const [trackData, setTrackData] = useState([]);
     const [trackLeaderboard, setTrackLeaderboard] = useState(new Map());
+    const [modalVisible, setModalVisible] = useState(false);
+    var [modalContent, setModalContent] = useState([]);
 
     const artistsPool = useMemo(() => ([
         "Taylor Swift", "Drake", "Billie Eilish", "Ariana Grande", "Ed Sheeran",
@@ -38,15 +45,23 @@ function App() {
         const randomArray = [];
 
         if (type === "artists") {
+            var usedIndices = new Set();
             for (let i = 0; i < 20; i++) {
                 const randomIndex = Math.floor(Math.random() * artistsPool.length);
-                randomArray.push(artistsPool[randomIndex]);
+                if (!usedIndices.has(randomIndex)) {
+                    randomArray.push(artistsPool[randomIndex]);
+                    usedIndices.add(randomIndex);
+                }
             }
         }
         else if(type === "tracks"){
+            var usedIndicesT = new Set();
             for (let i = 0; i < 20; i++) {
                 const randomIndex = Math.floor(Math.random() * tracksPool.length);
-                randomArray.push(tracksPool[randomIndex]);
+                if (!usedIndicesT.has(randomIndex)) {
+                    randomArray.push(tracksPool[randomIndex]);
+                    usedIndicesT.add(randomIndex);
+                }
             }
         }
    
@@ -54,30 +69,38 @@ function App() {
     }, [artistsPool, tracksPool])
 
     const populateLeaderboard = useCallback((arrayData, type) => {
+        var typeData = arrayData;
+        var similarityData = [0];
+
         const currentUserArray = arrayData[1][0]
         const newLeaderboard = new Map();
 
         for (let i = 1; i < arrayData[0].length; i++){
             let score = 0;
             var comparingArray = arrayData[1][i]
+            var userSimilarity = [];
 
             for (let k = 0; k < currentUserArray.length; k++){
                 const temp = currentUserArray[k]
                 if (comparingArray.includes(temp)) {
                     score++;
+                    userSimilarity.push(temp)
                 }
             }
             newLeaderboard.set(arrayData[0][i], score)
+            similarityData.push(userSimilarity)
         }
 
+        typeData.push(similarityData)
         console.log(newLeaderboard);
         if (type === "artists"){
+            setArtistData(typeData);
             setArtistLeaderboard(newLeaderboard); 
         }
         else if (type === "tracks"){
+            setTrackData(typeData);
             setTrackLeaderboard(newLeaderboard); 
         }
-        
     }, [])
 
     const populateUserData = useCallback((name, dataArray0, type) => {
@@ -196,6 +219,26 @@ function App() {
 
     }, [getUserProfile])
 
+    const openModal = (selectedUser, type) => {
+        var column;
+        var similarities;
+
+        if (type === "Artists"){
+            column = artistData[0].indexOf(selectedUser)
+            similarities = artistData[2][column]
+        }
+        else if (type === "Tracks"){
+            column = trackData[0].indexOf(selectedUser)
+            similarities = trackData[2][column]
+        }
+
+        setType(type);
+        setModalContent(similarities.join(', '));
+        setModalVisible(true);
+    }
+
+    const closeModal= () => setModalVisible(false);
+
     const logout = () => {
         setToken("")
         window.localStorage.removeItem("token")
@@ -211,12 +254,13 @@ function App() {
                         >Login to Spotify</a>
                     :
                     <>
-                        <Leaderboard data={artistLeaderboard} type={"Artists"}/>
-                        <Leaderboard data={trackLeaderboard} type={"Tracks"}/>
-                        <button onClick={logout}>Logout</button>
+                        <Leaderboard data={artistLeaderboard} type={"Artists"} onScoreClick={openModal}/>
+                        <Leaderboard data={trackLeaderboard} type={"Tracks"} onScoreClick={openModal}/>
+                        <Button onClick={logout} text={"Logout"}/>
                     </>
                 }
-            </header>            
+            </header>
+            <Modal show={modalVisible} onClose={closeModal} type= {type} array={modalContent}/>
         </div>
     );
 }
