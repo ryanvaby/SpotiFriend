@@ -3,6 +3,7 @@ import './App.css';
 import Leaderboard from './components/Leaderboard';
 import NavBar from './components/NavBar';
 import Button from './components/Button';
+import Table from './components/Table';
 import Modal from './components/Modal';
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import axios from 'axios';
@@ -19,6 +20,7 @@ function App() {
     const [userName, setUserName] = useState("");
     const [profileImage, setProfileImage] = useState("");
     var [playback, setPlayback] = useState("");
+    var [playbackArtist, setPlaybackArtist] = useState("");
     var [type, setType] = useState("");
     const [artistData, setArtistData] = useState([]);
     const [artistLeaderboard, setArtistLeaderboard] = useState(new Map());
@@ -193,7 +195,9 @@ function App() {
         .then(function (response) {
             const { data } = response;
             const currentTrack = data.item.name
+            const currentArtist = data.item.album.artists[0].name
             setPlayback(currentTrack)
+            setPlaybackArtist(currentArtist)
         })
         .catch(function (error) { 
             console.log(error);
@@ -289,7 +293,7 @@ function App() {
                 
             {!token ? (
                 <>
-                    <h1>Welcome to SpotiFriend</h1>
+                    <h1 style={{ fontSize: '80px' }}>Welcome to SpotiFriend</h1>
                     <Button onClick={handleLogin} text="Login with Spotify"/>
                 </>
             ) : (
@@ -305,11 +309,15 @@ function App() {
                             {profilePage ? (
                                 <>
                                     <NavBar onProfile={renderProfile} onLeaderboard={renderLeaderboard} onLogout={logout}/>
-                                    <img src={profileImage} alt="Profile" width="300" height="300"/>
+                                    <img src={profileImage} alt="Profile" width="300" height="300" style={{ marginTop: '50px' }}/>
                                     <h1>{userName}</h1>
-                                    <p>Currently listening to: {playback}</p>
-                                    <p>Top 20 Artists: {artistData[1][0].join(', ')}</p>
-                                    <p>Top 20 Tracks: {trackData[1][0].join(', ')}</p>
+                                    <div style={{backgroundColor: '#4CAF50', color: 'white', padding: '0px 12px', textAlign: 'center', borderRadius: '8px'}}>
+                                        <p style={{ fontSize: '16px' }}>Currently listening to: {playback} by {playbackArtist}</p>
+                                    </div>
+                                    <div>
+                                        <td><Table data={artistData[1][0]} type="Artists"/></td>
+                                        <td><Table data={trackData[1][0]} type="Tracks"/></td>
+                                    </div>
                                 </>
                             ) : (
                                 <>

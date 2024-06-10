@@ -12,7 +12,6 @@
     border-radius: 4px;
     transition-duration: 0.4s;
 }
-
 .custom-button:hover {
     background-color: white;
     color: black;
