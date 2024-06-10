@@ -1,3 +1,10 @@
+/*
+    The Navbar component creates a navigation bar with
+    buttons for Profile, Leaderboard, and Logout. Clicking these
+    buttons changes the page displayed by using the given props
+*/
+
+
 import React from 'react';
 import './NavBar.css';
 import Button from './Button';

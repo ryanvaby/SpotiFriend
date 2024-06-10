@@ -1,7 +1,10 @@
+/*
+    The Table component displays an array, 1 item
+    in each row with its corresponding index
+*/
+
 import React from 'react';
 import './Table.css';
-
-
 
 const Table = ({ data, type, }) => {
     return (

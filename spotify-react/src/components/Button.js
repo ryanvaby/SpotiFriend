@@ -1,3 +1,8 @@
+/*
+    The Button component takes props of an onClick function 
+    and text to be displayed.
+*/
+
 import React from 'react';
 import './Button.css';
 

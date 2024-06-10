@@ -1,7 +1,11 @@
+/*
+    The Leaderboard component takes props of a data array
+    and score click function. It sorts the data to be in 
+    descending order and displays through a table.
+*/
+
 import React from 'react';
 import './Leaderboard.css';
-
-
 
 const Leaderboard = ({ data, type, onScoreClick }) => {
     const sortedMap = new Map([...data.entries()].sort((a, b) => b[1] - a[1]));

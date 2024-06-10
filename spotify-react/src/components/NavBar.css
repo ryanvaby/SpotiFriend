@@ -1,3 +1,8 @@
+/*
+    Styling for the Navbr component that keeps the
+    navigation bar at the top of the webpage
+*/
+
 .navbar {
     display: flex;
     justify-content: space-between;

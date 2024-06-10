@@ -1,3 +1,9 @@
+/*
+    The Modal Component takes props of show and close events
+    and a data array. It displays a pop-up that lists common
+    artists/tracks between the clicked user and the current user.
+*/
+
 import React from 'react';
 import './Modal.css';
 
