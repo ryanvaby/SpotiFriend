@@ -1,6 +1,7 @@
 import React from 'react'
 import './App.css';
 import Leaderboard from './components/Leaderboard';
+import NavBar from './components/NavBar';
 import Button from './components/Button';
 import Modal from './components/Modal';
 import { useEffect, useState, useCallback, useMemo } from 'react';
@@ -12,9 +13,12 @@ function App() {
     const REDIRECT_URI = "http://localhost:3000"
     const AUTH_ENDPOINT = "https://accounts.spotify.com/authorize"
     const RESPONSE_TYPE = "token"
-    const SCOPE = "user-read-private user-top-read";
+    const SCOPE = "user-read-private user-top-read user-read-playback-state";
 
     const [token, setToken] = useState("");
+    const [userName, setUserName] = useState("");
+    const [profileImage, setProfileImage] = useState("");
+    var [playback, setPlayback] = useState("");
     var [type, setType] = useState("");
     const [artistData, setArtistData] = useState([]);
     const [artistLeaderboard, setArtistLeaderboard] = useState(new Map());
@@ -22,6 +26,8 @@ function App() {
     const [trackLeaderboard, setTrackLeaderboard] = useState(new Map());
     const [modalVisible, setModalVisible] = useState(false);
     var [modalContent, setModalContent] = useState([]);
+    var[leaderboardPage, setLeaderboardPage] = useState(true);
+    var [profilePage, setProfilePage] = useState(false);
 
     const artistsPool = useMemo(() => ([
         "Taylor Swift", "Drake", "Billie Eilish", "Ariana Grande", "Ed Sheeran",
@@ -92,7 +98,7 @@ function App() {
         }
 
         typeData.push(similarityData)
-        console.log(newLeaderboard);
+        //console.log(newLeaderboard);
         if (type === "artists"){
             setArtistData(typeData);
             setArtistLeaderboard(newLeaderboard); 
@@ -176,18 +182,36 @@ function App() {
 
     }, [populateUserData, token])
 
-    const getUserProfile = useCallback(async () => {
-        console.log("profile called");
-
-        axios.get("https://api.spotify.com/v1/me", {
+    const getPlaybackState = useCallback(async () => {
+        console.log("playback state called");
+    
+        axios.get("https://api.spotify.com/v1/me/player",  {
             headers: {
                 Authorization: `Bearer ${token}`
             }
         })
         .then(function (response) {
             const { data } = response;
-            const userName = data.display_name;
-            console.log(userName)
+            const currentTrack = data.item.name
+            setPlayback(currentTrack)
+        })
+        .catch(function (error) { 
+            console.log(error);
+        });
+    }, [token]);
+
+    const getUserProfile = useCallback(async () => {
+        console.log("profile called");
+
+        axios.get("https://api.spotify.com/v1/me",  {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        })
+        .then(function (response) {
+            const { data } = response;
+            setUserName(data.display_name);
+            setProfileImage(data.images[1].url)
             getTopArtists(userName);
             getTopTracks(userName);
         })
@@ -195,7 +219,7 @@ function App() {
             console.log(error);
         });
 
-    }, [getTopArtists, getTopTracks, token])
+    }, [getTopArtists, getTopTracks, userName, token])
 
     useEffect(() => {
         console.log("in useeffect")
@@ -215,9 +239,14 @@ function App() {
         if (token) {
             setToken(token)
             getUserProfile()
+            getPlaybackState()
         }
 
-    }, [getUserProfile])
+    }, [getUserProfile, getPlaybackState])
+
+    const handleLogin = () => {
+        window.location.href = `${AUTH_ENDPOINT}?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=${RESPONSE_TYPE}&scope=${SCOPE}`;
+    };
 
     const openModal = (selectedUser, type) => {
         var column;
@@ -239,26 +268,59 @@ function App() {
 
     const closeModal= () => setModalVisible(false);
 
+    const renderProfile = () => {
+        setProfilePage(true);
+        setLeaderboardPage(false);
+    }
+
+    const renderLeaderboard = () => {
+        setLeaderboardPage(true)
+        setProfilePage(false)
+    }
+
     const logout = () => {
         setToken("")
         window.localStorage.removeItem("token")
-    }
+    };
 
     return (
         <div className="App">
             <header className="App-header">
-                <h1>SpotiFriend</h1>
-                {!token ?
-                    <a href={
-                        `${AUTH_ENDPOINT}?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=${RESPONSE_TYPE}&scope=${SCOPE}`}
-                        >Login to Spotify</a>
-                    :
-                    <>
-                        <Leaderboard data={artistLeaderboard} type={"Artists"} onScoreClick={openModal}/>
-                        <Leaderboard data={trackLeaderboard} type={"Tracks"} onScoreClick={openModal}/>
-                        <Button onClick={logout} text={"Logout"}/>
-                    </>
-                }
+                
+            {!token ? (
+                <>
+                    <h1>Welcome to SpotiFriend</h1>
+                    <Button onClick={handleLogin} text="Login with Spotify"/>
+                </>
+            ) : (
+                <> 
+                    {leaderboardPage ? (
+                        <>
+                            <NavBar onProfile={renderProfile} onLeaderboard={renderLeaderboard} onLogout={logout}/>
+                            <Leaderboard data={artistLeaderboard} type={"Artists"} onScoreClick={openModal} />
+                            <Leaderboard data={trackLeaderboard} type={"Tracks"} onScoreClick={openModal} />
+                        </>
+                    ) : (
+                        <>
+                            {profilePage ? (
+                                <>
+                                    <NavBar onProfile={renderProfile} onLeaderboard={renderLeaderboard} onLogout={logout}/>
+                                    <img src={profileImage} alt="Profile" width="300" height="300"/>
+                                    <h1>{userName}</h1>
+                                    <p>Currently listening to: {playback}</p>
+                                    <p>Top 20 Artists: {artistData[1][0].join(', ')}</p>
+                                    <p>Top 20 Tracks: {trackData[1][0].join(', ')}</p>
+                                </>
+                            ) : (
+                                <>
+
+                                </>
+                            )}
+                        </>
+                    )}  
+                </>
+            )}
+
             </header>
             <Modal show={modalVisible} onClose={closeModal} type= {type} array={modalContent}/>
         </div>

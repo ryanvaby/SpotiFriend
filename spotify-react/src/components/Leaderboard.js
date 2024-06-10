@@ -5,17 +5,15 @@ import './Leaderboard.css';
 
 const Leaderboard = ({ data, type, onScoreClick }) => {
     const sortedMap = new Map([...data.entries()].sort((a, b) => b[1] - a[1]));
-    console.log(sortedMap)
-
     return (
         <div className="leaderboard">
             <h1>{type} Leaderboard</h1>
             <table>
                 <thead>
                     <tr>
-                        <th>Rank</th>
+                        <th className="header-left">Rank</th>
                         <th>Name</th>
-                        <th>Score</th>
+                        <th className="header-right">Score</th>
                     </tr>
                 </thead>
                 <tbody>

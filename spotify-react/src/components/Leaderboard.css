@@ -4,7 +4,7 @@
     width: 80%;
     max-width: 600px;
     text-align: center;
-    font-family: Arial, sans-serif;
+    font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
 }
 
 .leaderboard h1 {
@@ -18,8 +18,23 @@
     margin-bottom: 20px;
 }
 
-.leaderboard th {
-    background-color: #4CAF50;
+.leaderboard thead {
+    background-color: #4CAF50 ;
+}
+
+.header-left {
+    border-top-left-radius: 8px;
+    color: white;
+    padding: 10px;
+}
+
+.header-right {
+    border-top-right-radius: 8px;
+    color: white;
+    padding: 10px;
+}
+
+.leaderboard th{
     color: white;
     padding: 10px;
 }
