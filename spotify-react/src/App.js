@@ -20,7 +20,7 @@ import axios from 'axios';
 function App() {
     // information used when authorizing and calling Spotify API
     const CLIENT_ID = "2f4886cb98814cdb94ea0f9d5078901b"
-    const REDIRECT_URI = "http://localhost:3000"
+    const REDIRECT_URI = "https://88ad-216-9-28-2.ngrok-free.app"
     const AUTH_ENDPOINT = "https://accounts.spotify.com/authorize"
     const RESPONSE_TYPE = "token"
     const SCOPE = "user-read-private user-top-read user-read-playback-state";
@@ -40,6 +40,9 @@ function App() {
     var [modalContent, setModalContent] = useState([]);
     var[leaderboardPage, setLeaderboardPage] = useState(true);
     var [profilePage, setProfilePage] = useState(false);
+    const [artistsResponse, setArtistsResponse] = useState("");
+    const [tracksResponse, setTracksResponse] = useState("");
+    // const [loading, setLoading] = useState();
 
     // artistsPool provides random artists for generateRandomData to choose from
     const artistsPool = useMemo(() => ([
@@ -76,7 +79,7 @@ function App() {
                 }
             }
         }
-        else if(type === "tracks"){
+        else if (type === "tracks"){
             var usedIndicesT = new Set();
             for (let i = 0; i < 20; i++) {
                 const randomIndex = Math.floor(Math.random() * tracksPool.length);
@@ -137,13 +140,74 @@ function App() {
         }
     }, [])
 
+    const fetchData = useCallback(async (type) => {
+        if (type === "artists") {
+            axios.get("https://1a8e-216-9-28-2.ngrok-free.app/artists", {
+                headers: {
+                    "ngrok-skip-browser-warning": "69420",
+                }
+            })
+            .then(function (response) {
+                console.log("fetched artists");
+                console.log(response);
+                const { data } = response;
+                // const rows = [];
+                // data.forEach(row => console.log(JSON.stringify(row)))
+                console.log(JSON.stringify(data))
+                setArtistsResponse(JSON.stringify(data));
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
+        } else if (type === "tracks") {
+            axios.get("https://1a8e-216-9-28-2.ngrok-free.app/tracks", {
+                headers: {
+                    "ngrok-skip-browser-warning": "69420",
+                }
+            })
+            .then(function (response) {
+                console.log("fetched tracks");
+                console.log(response);
+                const { data } = response;
+                console.log(JSON.stringify(data))
+                setTracksResponse(JSON.stringify(data));
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
+        }
+    }, []);
+
+    const insertData = useCallback(async (type, data) => {
+        if (type === "artists") {
+            // insertArtists endpoint
+            axios.post("https://1a8e-216-9-28-2.ngrok-free.app/insertartists", { name: userName, artists: JSON.stringify(data) })
+            .then(function (response) {
+                console.log(response);
+            })
+            .catch(function (error) {
+                console.log(error);
+            }); 
+        }
+        else if (type === "tracks") {
+            // insertTracks endpoint
+            await axios.post("https://1a8e-216-9-28-2.ngrok-free.app/inserttracks", {name: userName, tracks: JSON.stringify(data) })
+            .then(function (response) {
+                console.log(response);
+            })
+            .catch(function (error) {
+                console.log(error);
+            }); 
+        }
+    }, [userName]);
+
     /*  
         populateUserData creates a data structure of users and their top
         artists/tracks for easy access when interacting with React components.
         It takes the current user's data as parameters to fill the first
         column of the structure.
     */
-    const populateUserData = useCallback((name, dataArray0, type) => {
+    const populateUserData = useCallback((dataArray0, type) => {
         // get 4 arrays, each with 20 artists or tracks based on type 
         var dataArray1 = generateRandomData(type);
         var dataArray2 = generateRandomData(type);
@@ -152,20 +216,54 @@ function App() {
 
         // fill data structure with data based on user
         let userData = [
-            [name, "Joe", "Katherine", "Andy", "Amanda"],
+            [userName, "Joe", "Katherine", "Andy", "Amanda"],
             [dataArray0, dataArray1, dataArray2, dataArray3, dataArray4]
         ];
+
+        // Parse array from JSON string
+        // Append to userData
+        var found = false;
+        if (type === "artists" && artistsResponse !== undefined) {
+            const dbArtists = JSON.parse(artistsResponse);
+            for (let i = 0; i < dbArtists.length; i++) {
+                console.log("entered");
+                if (dbArtists[i].name !== userName) {
+                    userData[0].push(dbArtists[i].name);
+                    userData[1].push(JSON.parse(dbArtists[i].artists));
+                } else {
+                    found = true;
+                }
+            }
+        } else if (type === "tracks" && tracksResponse !== undefined) {
+            const dbTracks = JSON.parse(tracksResponse);
+            for (let i = 0; i < dbTracks.length; i++) {
+                console.log("entered");
+                if (dbTracks[i].name !== userName) {
+                    userData[0].push(dbTracks[i].name);
+                    userData[1].push(JSON.parse(dbTracks[i].tracks));
+                } else {
+                    found = true;
+                }
+            }
+        }
+
+        // If you're a new user, then we need to turn your array into a JSON format
+        // Axios request to post my data into MySQL database
+        // insert artists or insert tracks depending on "type"
+        if (!found) {
+            insertData(type, dataArray0);
+        }
         
         // pass user data to be used to create a leaderboard
-        populateLeaderboard(userData, type)
-    }, [generateRandomData, populateLeaderboard])
+        populateLeaderboard(userData, type);
+    }, [generateRandomData, populateLeaderboard, artistsResponse, tracksResponse, insertData, userName])
 
     /*
         getTopArtists calls the Spotify Web API to obtain the current
         user's top 20 most listened to artists
     */
-    const getTopArtists = useCallback(async (userName) => {
-        console.log('artists called');
+    const getTopArtists = useCallback(async () => {
+        // console.log('artists called');
         
         // Spotify API call
         axios.get("https://api.spotify.com/v1/me/top/artists?limit=20", {
@@ -187,20 +285,19 @@ function App() {
             }
             
             // send the current user's data to be included in the large data structure
-            populateUserData(userName, userTop20A, "artists");
+            populateUserData(userTop20A, "artists");
         })
         .catch(function (error) { 
             console.log(error);
         });
-
     }, [populateUserData, token])
 
     /*
         getTopTracks calls the Spotify Web API to obtain the current
         user's top 20 most listened to tracks
     */
-    const getTopTracks = useCallback(async (userName) => {
-        console.log('tracks called');
+    const getTopTracks = useCallback(async () => {
+        // console.log('tracks called');
         
         // Spotify API call
         axios.get("https://api.spotify.com/v1/me/top/tracks?limit=20", {
@@ -222,7 +319,7 @@ function App() {
             }
 
             // send the current user's data to be included in the large data structure
-            populateUserData(userName, userTop20T, "tracks");
+            populateUserData(userTop20T, "tracks");
         })
         .catch(function (error) { 
             console.log(error);
@@ -235,7 +332,7 @@ function App() {
         the track the user is currently listening to
     */
     const getPlaybackState = useCallback(async () => {
-        console.log("playback state called");
+        // console.log("playback state called");
         
         // Spotify API call
         axios.get("https://api.spotify.com/v1/me/player",  {
@@ -246,8 +343,8 @@ function App() {
         .then(function (response) {
             // extract the track title and artist from the response
             const { data } = response;
-            const currentTrack = data.item.name
-            const currentArtist = data.item.album.artists[0].name
+            const currentTrack = data ? data.item.name : "";
+            const currentArtist = data ? data.item.album.artists[0].name : "";
 
             // assign the data to the matching state values
             setPlayback(currentTrack)
@@ -263,7 +360,7 @@ function App() {
         about the current user's profile
     */
     const getUserProfile = useCallback(async () => {
-        console.log("profile called");
+        // console.log("profile called");
         
         // Spotify API call
         axios.get("https://api.spotify.com/v1/me",  {
@@ -275,18 +372,14 @@ function App() {
             // extract the user's name and profile picture
             // and assign them to the matching state values
             const { data } = response;
+            console.log(data);
             setUserName(data.display_name);
-            setProfileImage(data.images[1].url)
-
-            // send the user's name to be included in the data structure
-            getTopArtists(userName);
-            getTopTracks(userName);
+            setProfileImage(data.images[1].url);
         })
         .catch(function (error) { 
             console.log(error);
         });
-
-    }, [getTopArtists, getTopTracks, userName, token])
+    }, [token])
 
     /*
         useEffect() assures the token is valid before the rest of the
@@ -294,26 +387,46 @@ function App() {
     */
     useEffect(() => {
         const hash = window.location.hash
-        let token = window.localStorage.getItem("token")
+        let newToken = window.localStorage.getItem("token")
 
-        console.log(token)
-        console.log(hash)
-
-        if (!token && hash) {
-            token = hash.substring(1).split("&").find(elem => elem.startsWith("access_token")).split("=")[1]
+        if (!newToken && hash) {
+            newToken = hash.substring(1).split("&").find(elem => elem.startsWith("access_token")).split("=")[1]
 
             window.location.hash = ""
-            window.localStorage.setItem("token", token)
+            window.localStorage.setItem("token", newToken)
         }
 
-        // calls functioncs once token is valid
+        // calls functions once token is valid
+        if (newToken) {
+            setToken(newToken)
+        }
+    }, [])
+
+    useEffect(() => {
         if (token) {
-            setToken(token)
             getUserProfile()
             getPlaybackState()
         }
+    }, [token, getUserProfile, getPlaybackState])
 
-    }, [getUserProfile, getPlaybackState])
+    useEffect(() => {
+        if (userName) {
+            fetchData("artists")
+            fetchData("tracks")
+            // getTopArtists()
+            // getTopTracks()
+        }
+    }, [userName, getTopArtists, getTopTracks, fetchData])
+
+    useEffect(() => {
+        console.log(artistsResponse);
+        getTopArtists();
+    }, [artistsResponse, getTopArtists])
+
+    useEffect(() => {
+        console.log(tracksResponse);
+        getTopTracks();
+    }, [tracksResponse, getTopTracks])
 
     // redirect to Spotify authorization page when login button is clicked
     const handleLogin = () => {
@@ -358,8 +471,9 @@ function App() {
 
     // display login page and reset token
     const logout = () => {
-        setToken("")
-        window.localStorage.removeItem("token")
+        setToken("");
+        window.localStorage.removeItem("token");
+        // maybe we should be clearing out more state with their setters?
     };
 
     /* 
